@@ -245,95 +245,95 @@ void Lddc::FillPointsToPclMsg(PointCloud& pcl_msg, \
 }
 
 /* for pcl::pxyzi */
-uint32_t Lddc::PublishPointcloudData(LidarDataQueue *queue, uint32_t packet_num,
-                                     uint8_t handle) {
-  uint64_t timestamp = 0;
-  uint64_t last_timestamp = 0;
-  uint32_t published_packet = 0;
+// uint32_t Lddc::PublishPointcloudData(LidarDataQueue *queue, uint32_t packet_num,
+//                                      uint8_t handle) {
+//   uint64_t timestamp = 0;
+//   uint64_t last_timestamp = 0;
+//   uint32_t published_packet = 0;
 
-  StoragePacket storage_packet;
-  LidarDevice *lidar = &lds_->lidars_[handle];
-  if (GetPublishStartTime(lidar, queue, &last_timestamp, &storage_packet)) {
-    /* the remaning packets in queue maybe not enough after skip */
-    return 0;
-  }
+//   StoragePacket storage_packet;
+//   LidarDevice *lidar = &lds_->lidars_[handle];
+//   if (GetPublishStartTime(lidar, queue, &last_timestamp, &storage_packet)) {
+//     /* the remaning packets in queue maybe not enough after skip */
+//     return 0;
+//   }
 
-  PointCloud cloud;
-  cloud.header.frame_id.assign(frame_id_);
-  cloud.height = 1;
-  cloud.width = 0;
+//   PointCloud cloud;
+//   cloud.header.frame_id.assign(frame_id_);
+//   cloud.height = 1;
+//   cloud.width = 0;
 
-  uint8_t point_buf[2048];
-  uint32_t is_zero_packet = 0;
-  uint8_t data_source = lidar->data_src;
-  uint32_t line_num = GetLaserLineNumber(lidar->info.type);
-  uint32_t echo_num = GetEchoNumPerPoint(lidar->raw_data_type);
-  while ((published_packet < packet_num) && !QueueIsEmpty(queue)) {
-    QueuePrePop(queue, &storage_packet);
-    LivoxEthPacket *raw_packet =
-        reinterpret_cast<LivoxEthPacket *>(storage_packet.raw_data);
-    timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
-    int64_t packet_gap = timestamp - last_timestamp;
-    if ((packet_gap > lidar->packet_interval_max) &&
-        lidar->data_is_pubulished) {
-      //RCLCPP_INFO(cur_node_->get_logger(), "Lidar[%d] packet time interval is %ldns", handle, packet_gap);
-      if (kSourceLvxFile != data_source) {
-        timestamp = last_timestamp + lidar->packet_interval;
-        ZeroPointDataOfStoragePacket(&storage_packet);
-        is_zero_packet = 1;
-      }
-    }
-    if (!published_packet) {
-      cloud.header.stamp = timestamp / 1000.0;  // to pcl ros time stamp
-    }
-    uint32_t single_point_num = storage_packet.point_num * echo_num;
+//   uint8_t point_buf[2048];
+//   uint32_t is_zero_packet = 0;
+//   uint8_t data_source = lidar->data_src;
+//   uint32_t line_num = GetLaserLineNumber(lidar->info.type);
+//   uint32_t echo_num = GetEchoNumPerPoint(lidar->raw_data_type);
+//   while ((published_packet < packet_num) && !QueueIsEmpty(queue)) {
+//     QueuePrePop(queue, &storage_packet);
+//     LivoxEthPacket *raw_packet =
+//         reinterpret_cast<LivoxEthPacket *>(storage_packet.raw_data);
+//     timestamp = GetStoragePacketTimestamp(&storage_packet, data_source);
+//     int64_t packet_gap = timestamp - last_timestamp;
+//     if ((packet_gap > lidar->packet_interval_max) &&
+//         lidar->data_is_pubulished) {
+//       //RCLCPP_INFO(cur_node_->get_logger(), "Lidar[%d] packet time interval is %ldns", handle, packet_gap);
+//       if (kSourceLvxFile != data_source) {
+//         timestamp = last_timestamp + lidar->packet_interval;
+//         ZeroPointDataOfStoragePacket(&storage_packet);
+//         is_zero_packet = 1;
+//       }
+//     }
+//     if (!published_packet) {
+//       cloud.header.stamp = timestamp / 1000.0;  // to pcl ros time stamp
+//     }
+//     uint32_t single_point_num = storage_packet.point_num * echo_num;
 
-    if (kSourceLvxFile != data_source) {
-      PointConvertHandler pf_point_convert =
-          GetConvertHandler(lidar->raw_data_type);
-      if (pf_point_convert) {
-        pf_point_convert(point_buf, raw_packet, lidar->extrinsic_parameter, \
-            line_num);
-      } else {
-        /* Skip the packet */
-        RCLCPP_INFO(cur_node_->get_logger(), "Lidar[%d] unkown packet type[%d]", handle,
-                 raw_packet->data_type);
-        break;
-      }
-    } else {
-      LivoxPointToPxyzrtl(point_buf, raw_packet, lidar->extrinsic_parameter, \
-          line_num);
-    }
-    LivoxPointXyzrtl *dst_point = (LivoxPointXyzrtl *)point_buf;
-    FillPointsToPclMsg(cloud, dst_point, single_point_num);
-    if (!is_zero_packet) {
-      QueuePopUpdate(queue);
-    } else {
-      is_zero_packet = 0;
-    }
-    cloud.width += single_point_num;
-    ++published_packet;
-    last_timestamp = timestamp;
-  }
+//     if (kSourceLvxFile != data_source) {
+//       PointConvertHandler pf_point_convert =
+//           GetConvertHandler(lidar->raw_data_type);
+//       if (pf_point_convert) {
+//         pf_point_convert(point_buf, raw_packet, lidar->extrinsic_parameter, \
+//             line_num);
+//       } else {
+//         /* Skip the packet */
+//         RCLCPP_INFO(cur_node_->get_logger(), "Lidar[%d] unkown packet type[%d]", handle,
+//                  raw_packet->data_type);
+//         break;
+//       }
+//     } else {
+//       LivoxPointToPxyzrtl(point_buf, raw_packet, lidar->extrinsic_parameter, \
+//           line_num);
+//     }
+//     LivoxPointXyzrtl *dst_point = (LivoxPointXyzrtl *)point_buf;
+//     FillPointsToPclMsg(cloud, dst_point, single_point_num);
+//     if (!is_zero_packet) {
+//       QueuePopUpdate(queue);
+//     } else {
+//       is_zero_packet = 0;
+//     }
+//     cloud.width += single_point_num;
+//     ++published_packet;
+//     last_timestamp = timestamp;
+//   }
 
-  rclcpp::Publisher<PointCloud>::SharedPtr publisher =
-      std::dynamic_pointer_cast<rclcpp::Publisher<PointCloud>>
-      (GetCurrentPublisher(handle));
-  if (kOutputToRos == output_type_) {
-    publisher->publish(cloud);
-  } else {
-#if 0    
-    if (bag_) {
-      bag_->write(p_publisher->getTopic(), rclcpp::Time(timestamp),
-                  cloud);
-    }
-#endif    
-  }
-  if (!lidar->data_is_pubulished) {
-    lidar->data_is_pubulished = true;
-  }
-  return published_packet;
-}
+//   rclcpp::Publisher<PointCloud>::SharedPtr publisher =
+//       std::dynamic_pointer_cast<rclcpp::Publisher<PointCloud>>
+//       (GetCurrentPublisher(handle));
+//   if (kOutputToRos == output_type_) {
+//     publisher->publish(cloud);
+//   } else {
+// #if 0    
+//     if (bag_) {
+//       bag_->write(p_publisher->getTopic(), rclcpp::Time(timestamp),
+//                   cloud);
+//     }
+// #endif    
+//   }
+//   if (!lidar->data_is_pubulished) {
+//     lidar->data_is_pubulished = true;
+//   }
+//   return published_packet;
+// }
 
 void Lddc::FillPointsToCustomMsg(livox_interfaces::msg::CustomMsg& livox_msg, \
     LivoxPointXyzrtl* src_point, uint32_t num, uint32_t offset_time, \
@@ -539,9 +539,10 @@ void Lddc::PollingLidarPointCloudData(uint8_t handle, LidarDevice *lidar) {
       PublishPointcloud2(p_queue, onetime_publish_packets, handle);
     } else if (kLivoxCustomMsg == transfer_format_) {
       PublishCustomPointcloud(p_queue, onetime_publish_packets, handle);
-    } else if (kPclPxyziMsg == transfer_format_) {
-      PublishPointcloudData(p_queue, onetime_publish_packets, handle);
-    }
+    } 
+    // else if (kPclPxyziMsg == transfer_format_) {
+    //   PublishPointcloudData(p_queue, onetime_publish_packets, handle);
+    // }
   }
 }
 
