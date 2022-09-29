@@ -215,7 +215,7 @@ uint32_t Lddc::PublishPointcloud2(LidarDataQueue *queue, uint32_t packet_num,
       std::dynamic_pointer_cast<rclcpp::Publisher
       <sensor_msgs::msg::PointCloud2>>(GetCurrentPublisher(handle));
   if (kOutputToRos == output_type_) {
-    publisher->publish(cloud);
+    publisher->publish(std::move(cloud));
   } else {
 #if 0    
     if (bag_) {
@@ -448,7 +448,7 @@ uint32_t Lddc::PublishCustomPointcloud(LidarDataQueue *queue,
       std::dynamic_pointer_cast<rclcpp::Publisher
       <livox_interfaces::msg::CustomMsg>>(GetCurrentPublisher(handle));  
   if (kOutputToRos == output_type_) {
-    publisher->publish(livox_msg);
+    publisher->publish(std::move(livox_msg));
   } else {
 #if 0    
     if (bag_) {
@@ -501,7 +501,7 @@ uint32_t Lddc::PublishImuData(LidarDataQueue *queue, uint32_t packet_num,
       std::dynamic_pointer_cast<rclcpp::Publisher
       <sensor_msgs::msg::Imu>>(GetCurrentImuPublisher(handle));
   if (kOutputToRos == output_type_) {
-    publisher->publish(imu_data);
+    publisher->publish(std::move(imu_data));
   } else {
 #if 0    
     if (bag_) {
