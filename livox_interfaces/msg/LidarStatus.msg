@@ -1,0 +1,11 @@
+bool temp_status
+bool volt_status
+bool motor_status
+bool dirty_warn
+bool firmware_err
+bool pps_status
+bool fan_status
+bool self_heating_status
+bool ptp_status
+bool time_sync_status
+bool system_status
