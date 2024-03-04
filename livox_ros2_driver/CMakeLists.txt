@@ -46,6 +46,10 @@ find_library(LIVOX_SDK_LIBRARY liblivox_sdk_static.a /usr/local/lib)
 link_directories(${PCL_LIBRARY_DIRS})
 add_definitions(${PCL_DEFINITIONS})
 
+include_directories(
+  include
+)
+
 # livox ros2 driver target
 ament_auto_add_library(${PROJECT_NAME} SHARED
   livox_ros2_driver/lvx_file.cpp
@@ -97,6 +101,14 @@ target_link_libraries(${PROJECT_NAME}
 rclcpp_components_register_node(${PROJECT_NAME}
   PLUGIN "livox_ros::LivoxDriver"
   EXECUTABLE ${PROJECT_NAME}_node
+)
+
+add_executable(device_discovery_node livox_ros2_driver/device_discovery_node.cpp livox_ros2_driver/device_discovery.cpp)
+target_include_directories(device_discovery_node PRIVATE ${livox_sdk_INCLUDE_DIRS})
+target_link_libraries(device_discovery_node ${livox_sdk_LIBRARIES})
+
+install(TARGETS device_discovery_node
+  DESTINATION lib/${PROJECT_NAME}
 )
 
 if(BUILD_TESTING)
