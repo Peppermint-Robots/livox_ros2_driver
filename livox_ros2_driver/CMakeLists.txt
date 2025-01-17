@@ -31,6 +31,8 @@ ament_auto_find_build_dependencies()
 find_package(PCL REQUIRED)
 find_package(livox_sdk REQUIRED)
 
+find_package(livox_sdk_vendor REQUIRED)
+
 # check apr
 find_package(PkgConfig)
 pkg_check_modules(APR apr-1)
